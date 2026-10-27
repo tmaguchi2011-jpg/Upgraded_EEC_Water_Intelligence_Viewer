@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: upgraded-eec-water-intelligence
+    runtime: docker
+    plan: starter
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: EARTHRISE_DATA_DIR
+        value: /var/data
+      - key: EARTHRISE_ADMIN_PASSWORD
+        sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    disk:
+      name: upgraded-eec-storage
+      mountPath: /var/data
+      sizeGB: 5

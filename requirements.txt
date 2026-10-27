@@ -1,0 +1,13 @@
+streamlit>=1.42
+pandas>=2.2
+numpy>=1.26
+plotly>=5.20
+scipy>=1.12
+PyMuPDF>=1.24
+lxml>=5.2
+html5lib>=1.1
+pytesseract>=0.3.13
+Pillow>=10
+
+opencv-python-headless>=4.8
+openai>=1.60
