@@ -26,6 +26,8 @@ PDF_DIR = DATA / 'pdfs'
 PDF_DIR.mkdir(parents=True, exist_ok=True)
 DB = DATA / 'earthrise.sqlite3'
 MEAD_URL = 'https://www.usbr.gov/lc/region/g4000/hourly/mead-elv.html'
+IID_SOURCE_URL = 'https://www.iid.com/water/water-supply/water-quality'
+EEC_URL = 'https://earthrisetoll.com/eec-engineering-center'
 MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
 # Strict unit preservation; aluminum ug/L converted to mg/L only when unit is identified.
 PARAMS = {
@@ -398,7 +400,7 @@ with st.sidebar:
                     st.error('Incorrect password')
     st.markdown('### 🌊 EARTHRISE')
     st.caption('WATER INTELLIGENCE / ANALYTICS')
-    pages = ['Overview','Water quality trends','Relationships & 3D','Lake Mead']
+    pages = ['Overview','Water quality trends','Relationships & 3D','Lake Mead','About & Disclaimer']
     if st.session_state.admin_ok:
         pages += ['Import PDFs','Review & validate','Data vault']
     page=st.radio('NAVIGATE', pages, label_visibility='collapsed')
@@ -408,6 +410,21 @@ with st.sidebar:
     st.divider()
     st.caption('Historical database: persistent storage enabled')
     st.caption('Lake Mead: U.S. Bureau of Reclamation')
+    with st.expander('Data Source & Disclaimer', expanded=False):
+        st.caption(
+            'Independent EEC application. IID measurements may contain extraction or '
+            'transcription errors; computed charts are not official IID analyses. '
+            'Historical canal source-water measurements do not establish drinking-water safety.'
+        )
+        st.markdown(f'[Original IID water quality reports]({IID_SOURCE_URL})')
+        st.caption('See About & Disclaimer for limitations, validation and methodology.')
+    st.markdown(
+        f'<div style="text-align:center;margin-top:20px">'
+        f'<a href="{EEC_URL}" target="_blank" rel="noopener noreferrer" '
+        f'style="color:#68d9d1;text-decoration:none;font-size:13px">'
+        'Earthrise Engineering Center (EEC)</a></div>',
+        unsafe_allow_html=True
+    )
 
 rows=fetch('measurements');docs=fetch('documents');lake=fetch('mead')
 if not st.session_state.admin_ok:
@@ -421,6 +438,7 @@ if not selected.empty and 'year' in selected: selected['year']=pd.to_numeric(sel
 
 if page=='Overview':
     hero('RESEARCH DASHBOARD','Water quality, clearly connected.','IID East Highline Canal • 2010–2025 historical context • Lake Mead reservoir intelligence')
+    st.caption('Source: Imperial Irrigation District (IID). Independent EEC visualization; consult About & Disclaimer before relying on measurements.')
     a,b,c,d=st.columns(4)
     a.metric('Stored IID PDFs',len(docs));b.metric('Measurements',len(rows));c.metric('Verified',verified_count)
     d.metric('Lake Mead months',len(lake))
@@ -658,6 +676,81 @@ elif page=='Lake Mead':
                     if match[par].nunique()>1 and match.lake_mead_ft.nunique()>1:
                         r,p=pearsonr(match[par],match.lake_mead_ft);st.caption(f'Pearson r={r:+.3f}, p={p:.3g}, paired n={len(match)}. Does not imply causation.')
         st.download_button('Download Lake Mead CSV',lake.to_csv(index=False),'lake_mead_monthly.csv',mime='text/csv')
+
+elif page=='About & Disclaimer':
+    hero('SOURCE & GOVERNANCE', 'About & Disclaimer',
+         'Data provenance, review status, limitations, and responsible use.')
+    st.subheader('About this application')
+    st.write(
+        'Earthrise Water Intelligence Pro is an independent environmental-data '
+        'exploration and visualization tool developed by Earthrise Engineering '
+        'Center (EEC), Earthrise Nutritionals LLC. It displays historical source-water '
+        'quality measurements and Lake Mead reservoir context for educational, '
+        'research, and engineering reference purposes.'
+    )
+    st.subheader('Original data sources')
+    st.markdown(f'- [Imperial Irrigation District (IID) — Water Quality Reports]({IID_SOURCE_URL})')
+    st.markdown(f'- [U.S. Bureau of Reclamation — Lake Mead elevations]({MEAD_URL})')
+    st.write(
+        'Water-quality measurements are attributed to the underlying IID reports. '
+        'Lake Mead water-surface elevations are sourced from the U.S. Bureau of '
+        'Reclamation. EEC develops the extraction, review, calculations, '
+        'and visualizations; analytical results shown here are not official IID '
+        'or Bureau of Reclamation conclusions.'
+    )
+    st.subheader('Independent application')
+    st.write(
+        'This application is not operated, sponsored, endorsed, or certified by '
+        'IID or the U.S. Bureau of Reclamation. Links to original publications '
+        'are supplied so visitors can verify source material.'
+    )
+    st.subheader('Accuracy, OCR, and validation')
+    st.write(
+        'Historical PDF reports may be processed using OpenCV image preprocessing, '
+        'Tesseract optical character recognition (OCR), optional OpenAI vision analysis, '
+        'automated text extraction, and unit conversion. These processes can '
+        'introduce omissions, parsing errors, transcription errors, or incorrect '
+        'interpretations. Numeric water-quality charts use only records marked '
+        'verified by the application review workflow. Verification is an internal '
+        'data review, not third-party laboratory certification. Always check '
+        'critical values against the original report and its sampling details.'
+    )
+    st.subheader('Sampling and analytical limitations')
+    st.write(
+        'Measurements describe specified locations and sampling dates and may '
+        'not represent present conditions or water delivered to a particular '
+        'facility. Annual summaries are averages of available observations; '
+        'sampling frequency and parameter coverage vary. Missing observations '
+        'are not evidence of zero concentration. Correlations with reservoir '
+        'elevation do not establish causation. Source reports may be revised '
+        'after this database has been updated.'
+    )
+    st.write(
+        'Lake Mead elevation (feet) refers to the water-surface elevation '
+        'above its reference datum, not the physical depth of the lake. '
+        'The plotted height above the 895-foot dead-pool reference is a '
+        'derived operating-reference comparison, not a lake-depth measurement.'
+    )
+    st.subheader('Water suitability and responsible use')
+    st.warning(
+        'Canal source-water results do not indicate that water is safe to drink. '
+        'This dashboard is not a substitute for certified testing, regulatory '
+        'interpretation, professional engineering analysis, or site-specific '
+        'treatment assessments.'
+    )
+    st.write(
+        'The platform and its operators do not guarantee completeness, '
+        'accuracy, timeliness, or fitness for a particular purpose. Users should '
+        'independently verify important measurements and decisions with the '
+        'original sources and appropriate qualified professionals.'
+    )
+    st.subheader('Updates and contact')
+    st.write(
+        'The database can change as additional records are imported and '
+        'reviewed. For questions or suspected data errors, contact '
+        'Earthrise Engineering Center through its website.'
+    )
+    st.markdown(f'[Earthrise Engineering Center (EEC)]({EEC_URL})')
 
 elif page=='Import PDFs' and st.session_state.admin_ok:
     hero('DATA INTAKE','Build your permanent historical archive','Import new reports once. Existing documents are detected by file hash and retained in SQLite.')
